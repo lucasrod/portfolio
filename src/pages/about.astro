@@ -9,9 +9,15 @@ import { site } from '../data/site';
       <h1 class="font-serif text-[2.6rem] leading-[1.05] font-[400] tracking-[-0.015em] [font-variation-settings:'opsz'_72] md:text-5xl">About</h1>
       <div class="prose-case mt-8">
         <p>
-          I'm studying statistics at Universidad de la República and data science and business analytics at the University of
-          London, in parallel. The two programmes pull in useful directions: one towards inference and getting the assumptions
-          right, the other towards building things that run.
+          I came to data science from software. Before my data science degree I worked in API support at Sabre and then in
+          data and systems integration at UruIT, where I moved client data between Salesforce, Dynamics CRM and SQL Server and
+          built dashboards on top of it. That work showed me how much of a decision depends on data that is joined and defined
+          correctly.
+        </p>
+        <p>
+          I then studied data science and business analytics at the University of London, alongside statistics courses at
+          Universidad de la República. The two pulled in useful directions: one towards inference and getting the assumptions
+          right, the other towards applied modelling with R, Python, Stata and Tableau.
         </p>
         <p>
           What I care about most is the part of the work that rarely shows in a chart: knowing what a zero in a column really
@@ -25,6 +31,20 @@ import { site } from '../data/site';
     </div>
 
     <aside class="space-y-10 font-sans lg:pt-24">
+      <section aria-labelledby="exp">
+        <h2 id="exp" class="text-sm font-semibold">Experience</h2>
+        <ul class="mt-3 space-y-4">
+          {
+            site.experience.map((x) => (
+              <li>
+                <p class="font-medium">{x.role}</p>
+                <p class="text-sm text-ink-2">{x.org}</p>
+                <p class="tabular text-sm text-ink-2">{x.dates}</p>
+              </li>
+            ))
+          }
+        </ul>
+      </section>
       <section aria-labelledby="edu">
         <h2 id="edu" class="text-sm font-semibold">Education</h2>
         <ul class="mt-3 space-y-4">
@@ -32,8 +52,7 @@ import { site } from '../data/site';
             site.education.map((e) => (
               <li>
                 <p class="font-medium">{e.degree}</p>
-                <p class="text-sm text-ink-2">{e.school}</p>
-                <p class="mt-1 text-sm text-ink-2">{e.note}</p>
+                <p class="text-sm text-ink-2">{e.school}{e.dates && `, ${e.dates.toLowerCase()}`}</p>
               </li>
             ))
           }

@@ -14,7 +14,7 @@ const handle = site.github.replace('https://', '');
   <div class="wrap pt-10 md:pt-16">
     <div class="no-print flex flex-wrap items-center justify-between gap-4">
       <p class="max-w-[52ch] font-sans text-sm text-ink-2">
-        One page, kept in sync with the projects on this site. Use your browser's print dialog to save it as a PDF.
+        Kept in sync with the projects on this site. Use your browser's print dialog to save it as a PDF.
       </p>
       <div class="flex gap-3">
         {site.cvPdf && <a class="btn btn-primary" href={site.cvPdf} download>Download PDF</a>}
@@ -25,7 +25,7 @@ const handle = site.github.replace('https://', '');
     <article class="cv mx-auto mt-10 max-w-[50rem] rounded-lg border border-rule bg-paper p-6 md:p-12 print:mt-0 print:max-w-none print:border-0 print:p-0">
       <header>
         <h1 class="font-serif text-4xl leading-none font-[420] tracking-[-0.015em] [font-variation-settings:'opsz'_72]">{site.name}</h1>
-        <p class="mt-2 font-sans text-md">{site.role}, {site.location}</p>
+        <p class="mt-2 font-sans text-md">{site.headline}. {site.location}.</p>
         <p class="mt-1 font-sans text-sm text-ink-2">
           <a class="link" href={site.github}>{handle}</a>
           {site.linkedin && <>, <a class="link" href={site.linkedin}>{site.linkedin.replace('https://www.', '')}</a></>}
@@ -33,13 +33,33 @@ const handle = site.github.replace('https://', '');
         </p>
       </header>
 
+      <section class="mt-8" aria-labelledby="cv-exp">
+        <h2 id="cv-exp" class="border-b border-rule pb-1 font-sans text-sm font-semibold">Experience</h2>
+        <ul class="mt-3 space-y-4">
+          {site.experience.map((x) => (
+            <li class="break-inside-avoid">
+              <p class="flex flex-wrap justify-between gap-x-4 font-sans">
+                <span class="font-medium">{x.role}, <span class="font-normal">{x.org}</span></span>
+                <span class="tabular text-sm text-ink-2">{x.dates}</span>
+              </p>
+              <ul class="mt-1 list-disc space-y-0.5 pl-5 font-serif leading-snug text-ink-2 marker:text-rule">
+                {x.points.map((pt) => <li>{pt}</li>)}
+              </ul>
+            </li>
+          ))}
+        </ul>
+      </section>
+
       <section class="mt-8" aria-labelledby="cv-edu">
         <h2 id="cv-edu" class="border-b border-rule pb-1 font-sans text-sm font-semibold">Education</h2>
         <ul class="mt-3 space-y-3">
           {site.education.map((e) => (
-            <li>
-              <p class="font-sans font-medium">{e.degree}, <span class="font-normal">{e.school}</span></p>
-              <p class="font-serif text-ink-2">{e.note}</p>
+            <li class="break-inside-avoid">
+              <p class="flex flex-wrap justify-between gap-x-4 font-sans">
+                <span class="font-medium">{e.degree}, <span class="font-normal">{e.school}</span></span>
+                {e.dates && <span class="tabular text-sm text-ink-2">{e.dates}</span>}
+              </p>
+              <p class="font-serif leading-snug text-ink-2">{e.note}</p>
             </li>
           ))}
         </ul>
