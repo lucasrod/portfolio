@@ -1,0 +1,38 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import ProjectPreview from './ProjectPreview.astro';
+import StatusBadge from './StatusBadge.astro';
+import { caseUrl, languages, t } from '../i18n/ui';
+
+interface Props {
+  project: CollectionEntry<'projects'>;
+  headingLevel?: 'h2' | 'h3';
+}
+const { project, headingLevel = 'h3' } = Astro.props;
+const d = project.data;
+const href = caseUrl(project.id, d.lang);
+const Heading = headingLevel;
+---
+
+<article class="group grid gap-5 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-10">
+  <a href={href} tabindex="-1" class="block transition-opacity group-hover:opacity-95" aria-hidden="true">
+    <ProjectPreview kind={d.preview} />
+  </a>
+  <div class="flex flex-col">
+    <div class="flex flex-wrap items-center gap-2">
+      <StatusBadge status={d.status} />
+      {d.repo.visibility === 'private' && <span class="font-sans text-xs text-ink-2">Code private</span>}
+      {d.lang !== 'en' && <span class="font-sans text-xs text-ink-2" lang={d.lang}>{languages[d.lang]}</span>}
+    </div>
+    <Heading class="mt-3 font-serif text-[1.75rem] leading-[1.15] font-[440] tracking-[-0.01em] [font-variation-settings:'opsz'_36]">
+      <a href={href} class="decoration-accent decoration-1 underline-offset-[0.18em] hover:underline">{d.title}</a>
+    </Heading>
+    <p class="mt-2 max-w-[56ch] font-serif text-md leading-snug text-ink-2">{d.question}</p>
+    <p class="mt-4 font-sans text-sm text-ink-2">
+      <span class="text-ink">{d.roles.join(', ')}.</span> {d.stack.slice(0, 5).join(', ')}.
+    </p>
+    <p class="mt-auto pt-4 font-sans text-sm">
+      <a href={href} class="link font-medium text-ink">{t(d.lang, 'case.read')}</a>
+    </p>
+  </div>
+</article>

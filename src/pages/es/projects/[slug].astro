@@ -1,0 +1,22 @@
+---
+// Spanish case studies: any project file with `lang: es`. Empty until one exists.
+import { getCollection, render } from 'astro:content';
+import CaseStudyLayout from '../../../layouts/CaseStudyLayout.astro';
+
+export async function getStaticPaths() {
+  const all = await getCollection('projects');
+  return all
+    .filter((p) => p.data.lang === 'es')
+    .map((project) => ({
+      params: { slug: project.id },
+      props: { project, translation: all.find((o) => o.data.translationOf === project.id || project.data.translationOf === o.id) },
+    }));
+}
+
+const { project, translation } = Astro.props;
+const { Content, headings } = await render(project);
+---
+
+<CaseStudyLayout project={project} headings={headings} translation={translation}>
+  <Content />
+</CaseStudyLayout>

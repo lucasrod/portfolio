@@ -1,0 +1,39 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ProjectRow from '../../components/ProjectRow.astro';
+
+const projects = (await getCollection('projects'))
+  .filter((p) => !p.data.translationOf)
+  .sort((a, b) => a.data.order - b.data.order);
+const featured = projects.filter((p) => p.data.tier === 'featured');
+const supporting = projects.filter((p) => p.data.tier === 'supporting');
+---
+
+<BaseLayout title="Projects" description="Case studies in statistics, machine learning and data engineering, with the state of each project stated plainly.">
+  <div class="wrap pt-10 md:pt-16">
+    <h1 class="font-serif text-[2.6rem] leading-[1.05] font-[400] tracking-[-0.015em] [font-variation-settings:'opsz'_72] md:text-5xl">Projects</h1>
+    <p class="mt-5 max-w-[58ch] font-serif text-lg leading-snug text-ink-2">
+      Each project is written up as a case study: the question, the data, the decisions and what is verified so far.
+      Work that is not finished is marked as in progress, with what is missing.
+    </p>
+
+    <section class="mt-14" aria-labelledby="main-work">
+      <h2 id="main-work" class="font-sans text-sm font-semibold text-ink-2">Main work</h2>
+      <div class="mt-6 space-y-14 md:space-y-16">
+        {featured.map((p) => <ProjectRow project={p} />)}
+      </div>
+    </section>
+
+    {
+      supporting.length > 0 && (
+        <section class="mt-20" aria-labelledby="more-work">
+          <h2 id="more-work" class="font-sans text-sm font-semibold text-ink-2">Also building</h2>
+          <div class="mt-6 space-y-14">
+            {supporting.map((p) => <ProjectRow project={p} />)}
+          </div>
+        </section>
+      )
+    }
+  </div>
+</BaseLayout>
