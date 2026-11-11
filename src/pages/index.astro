@@ -1,0 +1,106 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import AmesMap from '../components/AmesMap.astro';
+import ProjectRow from '../components/ProjectRow.astro';
+import ContactLinks from '../components/ContactLinks.astro';
+import { site } from '../data/site';
+
+const featured = (await getCollection('projects'))
+  .filter((p) => p.data.tier === 'featured' && !p.data.translationOf)
+  .sort((a, b) => a.data.order - b.data.order);
+
+const strengths = [
+  {
+    title: 'Statistical modelling',
+    body: 'Regression, classification and probability models, chosen for the question and judged with metrics that fit it.',
+    evidence: [
+      { label: 'Ames Housing', href: '/projects/ames-housing/' },
+      { label: 'Census classifiers', href: '/projects/census-ml/' },
+    ],
+  },
+  {
+    title: 'Data that holds up',
+    body: 'Cleaning decisions written down and reproducible, from hidden absences in housing data to Census microdata in Parquet.',
+    evidence: [
+      { label: 'Ames decision records', href: '/projects/ames-housing/#approach' },
+      { label: 'Census pipeline', href: '/projects/census-ml/#approach' },
+    ],
+  },
+  {
+    title: 'Probabilistic reasoning',
+    body: 'Base rates, Bayesian updating and calibration, in a layered Python codebase with automated tests.',
+    evidence: [{ label: 'PredDesk', href: '/projects/preddesk/' }],
+  },
+];
+---
+
+<BaseLayout description="Lucas Rodriguez, junior data scientist in Montevideo. Statistics, machine learning and reproducible analysis, written up as case studies.">
+  <section class="wrap grid items-start gap-12 pt-10 md:pt-16 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-14 lg:pt-20">
+    <div class="lg:pt-6">
+      <h1
+        class="font-serif text-[3.25rem] leading-[0.95] font-[380] tracking-[-0.025em] [font-variation-settings:'opsz'_72] sm:text-[4.5rem] lg:text-[5.25rem]"
+      >
+        Lucas<br />Rodriguez
+      </h1>
+      <p class="mt-8 max-w-[34ch] font-serif text-xl leading-[1.4] [font-variation-settings:'opsz'_24] md:text-[1.6rem]">
+        I study statistics in Montevideo and build data science projects end to end: careful cleaning, honest evaluation, and
+        code someone else can rerun.
+      </p>
+      <p class="mt-6 max-w-[46ch] font-sans text-[0.95rem] leading-relaxed text-ink-2">
+        Statistics at Universidad de la República and Data Science and Business Analytics at the University of London. Looking
+        for junior roles in data science, analytics and machine learning.
+      </p>
+      <div class="mt-8 flex flex-wrap gap-3">
+        <a href="/projects/" class="btn btn-primary">See the projects</a>
+        <a href="/cv/" class="btn btn-quiet">Read my CV</a>
+      </div>
+    </div>
+    <AmesMap />
+  </section>
+
+  <section class="wrap mt-24 md:mt-32" aria-labelledby="strengths">
+    <h2 id="strengths" class="font-serif text-2xl leading-tight font-[420] [font-variation-settings:'opsz'_48]">What I work on</h2>
+    <dl class="mt-8 grid gap-10 md:grid-cols-3 md:gap-12">
+      {
+        strengths.map((s) => (
+          <div>
+            <dt class="font-sans text-md font-semibold">{s.title}</dt>
+            <dd class="mt-2 font-serif text-md leading-snug text-ink-2">{s.body}</dd>
+            <dd class="mt-3 font-sans text-sm">
+              <span class="text-ink-2">See </span>
+              {s.evidence.map((e, i) => (
+                <>
+                  {i > 0 && <span class="text-ink-2"> and </span>}
+                  <a class="link" href={e.href}>
+                    {e.label}
+                  </a>
+                </>
+              ))}
+            </dd>
+          </div>
+        ))
+      }
+    </dl>
+  </section>
+
+  <section class="wrap mt-24 md:mt-32" aria-labelledby="work">
+    <div class="flex items-baseline justify-between gap-4">
+      <h2 id="work" class="font-serif text-2xl leading-tight font-[420] [font-variation-settings:'opsz'_48]">Selected work</h2>
+      <a href="/projects/" class="link font-sans text-sm">All projects</a>
+    </div>
+    <div class="mt-10 space-y-16">
+      {featured.map((p) => <ProjectRow project={p} />)}
+    </div>
+  </section>
+
+  <section class="wrap mt-24 md:mt-32" aria-labelledby="contact">
+    <div class="max-w-[46rem] rounded-lg bg-panel p-6 md:p-10">
+      <h2 id="contact" class="font-serif text-2xl leading-tight font-[420] [font-variation-settings:'opsz'_48]">Get in touch</h2>
+      <p class="mt-3 max-w-[52ch] font-serif text-md leading-snug text-ink-2">
+        I'm open to junior roles and internships in data science, analytics and machine learning, in {site.location.split(',')[0]} or remote.
+      </p>
+      <ContactLinks class="mt-6" />
+    </div>
+  </section>
+</BaseLayout>

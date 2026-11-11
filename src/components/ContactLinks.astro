@@ -1,0 +1,26 @@
+---
+import { site } from '../data/site';
+interface Props { class?: string }
+const { class: cls } = Astro.props;
+const handle = site.github.replace('https://github.com/', '');
+---
+
+<ul class:list={['flex flex-wrap gap-3', cls]}>
+  {
+    site.email && (
+      <li>
+        <a class="btn btn-primary" href={`mailto:${site.email}`}>Email {site.email}</a>
+      </li>
+    )
+  }
+  <li>
+    <a class:list={['btn', site.email ? 'btn-quiet' : 'btn-primary']} href={site.github}>GitHub, {handle}</a>
+  </li>
+  {
+    site.linkedin && (
+      <li>
+        <a class="btn btn-quiet" href={site.linkedin}>LinkedIn</a>
+      </li>
+    )
+  }
+</ul>

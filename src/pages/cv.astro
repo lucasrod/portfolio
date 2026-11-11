@@ -1,0 +1,97 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { site } from '../data/site';
+import { t } from '../i18n/ui';
+
+const projects = (await getCollection('projects'))
+  .filter((p) => !p.data.translationOf)
+  .sort((a, b) => a.data.order - b.data.order);
+const handle = site.github.replace('https://', '');
+---
+
+<BaseLayout title="CV" description="Curriculum vitae of Lucas Rodriguez: education, projects and tools.">
+  <div class="wrap pt-10 md:pt-16">
+    <div class="no-print flex flex-wrap items-center justify-between gap-4">
+      <p class="max-w-[52ch] font-sans text-sm text-ink-2">
+        One page, kept in sync with the projects on this site. Use your browser's print dialog to save it as a PDF.
+      </p>
+      <div class="flex gap-3">
+        {site.cvPdf && <a class="btn btn-primary" href={site.cvPdf} download>Download PDF</a>}
+        <button type="button" class:list={['btn', site.cvPdf ? 'btn-quiet' : 'btn-primary']} data-print>Save as PDF</button>
+      </div>
+    </div>
+
+    <article class="cv mx-auto mt-10 max-w-[50rem] rounded-lg border border-rule bg-paper p-6 md:p-12 print:mt-0 print:max-w-none print:border-0 print:p-0">
+      <header>
+        <h1 class="font-serif text-4xl leading-none font-[420] tracking-[-0.015em] [font-variation-settings:'opsz'_72]">{site.name}</h1>
+        <p class="mt-2 font-sans text-md">{site.role}, {site.location}</p>
+        <p class="mt-1 font-sans text-sm text-ink-2">
+          <a class="link" href={site.github}>{handle}</a>
+          {site.linkedin && <>, <a class="link" href={site.linkedin}>{site.linkedin.replace('https://www.', '')}</a></>}
+          {site.email && <>, <a class="link" href={`mailto:${site.email}`}>{site.email}</a></>}
+        </p>
+      </header>
+
+      <section class="mt-8" aria-labelledby="cv-edu">
+        <h2 id="cv-edu" class="border-b border-rule pb-1 font-sans text-sm font-semibold">Education</h2>
+        <ul class="mt-3 space-y-3">
+          {site.education.map((e) => (
+            <li>
+              <p class="font-sans font-medium">{e.degree}, <span class="font-normal">{e.school}</span></p>
+              <p class="font-serif text-ink-2">{e.note}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section class="mt-8" aria-labelledby="cv-proj">
+        <h2 id="cv-proj" class="border-b border-rule pb-1 font-sans text-sm font-semibold">Projects</h2>
+        <ul class="mt-3 space-y-4">
+          {projects.map((p) => (
+            <li class="break-inside-avoid">
+              <p class="font-sans font-medium">
+                {p.data.title}
+                <span class="font-normal text-ink-2"> ({t('en', `status.${p.data.status}`).toLowerCase()}{p.data.repo.visibility === 'private' ? ', code private' : ''})</span>
+              </p>
+              <p class="font-serif leading-snug text-ink-2">{p.data.summary}</p>
+              <p class="mt-0.5 font-sans text-sm text-ink-2">{p.data.stack.join(', ')}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section class="mt-8" aria-labelledby="cv-tools">
+        <h2 id="cv-tools" class="border-b border-rule pb-1 font-sans text-sm font-semibold">Tools</h2>
+        <dl class="mt-3 space-y-1.5 font-sans text-sm">
+          {site.tools.map((g) => (
+            <div class="sm:flex sm:gap-3">
+              <dt class="shrink-0 text-ink-2 sm:w-48">{g.group}</dt>
+              <dd>{g.items.join(', ')}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
+
+      <section class="mt-8" aria-labelledby="cv-lang">
+        <h2 id="cv-lang" class="border-b border-rule pb-1 font-sans text-sm font-semibold">Languages</h2>
+        <p class="mt-3 font-sans text-sm">Spanish (native), English.</p>
+      </section>
+    </article>
+  </div>
+</BaseLayout>
+
+<script>
+  document.querySelector('[data-print]')?.addEventListener('click', () => window.print());
+</script>
+
+<style>
+  @media print {
+    @page { margin: 12mm 14mm; }
+    :global(header[data-header]), :global(footer) { display: none; }
+    .cv { font-size: 9.5pt; }
+    .cv :global(h1) { font-size: 26pt; }
+    .cv :global(section) { margin-top: 14pt; }
+    .cv :global(li + li) { margin-top: 6pt; }
+  }
+</style>
