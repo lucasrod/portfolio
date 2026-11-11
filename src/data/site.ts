@@ -15,7 +15,7 @@ export const site: Site = {
   location: 'Montevideo, Uruguay',
   github: 'https://github.com/lucasrod',
   /** e.g. 'https://www.linkedin.com/in/your-handle' */
-  linkedin: '',
+  linkedin: 'https://www.linkedin.com/in/lucas-rodriguez-5b664682/',
   /** Public contact address. Empty = not published. */
   email: '',
   /** Path under /public, e.g. '/cv/lucas-rodriguez-cv.pdf'. Empty = print-to-PDF only. */
