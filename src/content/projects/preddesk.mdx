@@ -1,0 +1,57 @@
+---
+title: PredDesk
+question: Are prediction-market prices well calibrated, and can base rates plus Bayesian updating do better than the market price?
+summary: A research workbench for prediction markets, with probability models, a paper broker and a backtester, built in Python with a layered architecture and 301 automated tests.
+lang: en
+status: in-progress
+pending:
+  - Score forecasts against event outcomes instead of trade profitability
+  - Run a reproducible calibration experiment on a fixed set of resolved markets
+  - Add installation instructions
+tier: featured
+order: 3
+roles: [Probabilistic modelling, Software engineering]
+stack: [Python 3.13, Pydantic, FastAPI, pytest, Hypothesis]
+repo:
+  url: https://github.com/lucasrod/preddesk
+  visibility: public
+facts:
+  - label: Automated tests
+    value: "301 passing"
+    source: pytest run on commit e1ded33, 10 November 2026
+  - label: Line and branch coverage
+    value: "96%"
+    source: pytest-cov on the same run
+verified:
+  commit: e1ded33
+  date: 2026-11-10
+preview: preddesk-layers
+---
+
+## Problem
+
+A prediction-market price can be read as a probability. Whether it is a good one is an empirical question: across many markets, do events priced at 30% happen about 30% of the time? PredDesk is a workbench for asking that question carefully, and for testing whether simple models of my own can improve on the market.
+
+It is a research tool, not a trading system. It simulates; it never places real orders.
+
+## Approach
+
+- **Probability models.** An implied-probability model that removes the market's overround; a base-rate model with a Wilson confidence interval; a sequential Bayesian updater; and analyst overrides that must carry an explanation.
+- **Signals.** A signal engine compares model estimates with market prices.
+- **Simulation.** A paper broker accounts for fees and slippage, and a backtester replays market snapshots in time order.
+- **Data.** An adapter normalises market data from Polymarket.
+- **Architecture.** Domain logic has no dependency on the web framework or storage. Use cases sit above it, and a FastAPI app and a command-line interface sit on top. Storage is in memory for now.
+
+## Results
+
+The test suite passes: 301 tests, with 96% coverage, including property-based tests. That says the code does what its tests describe, not that its forecasts are good. No forecasting results are reported yet.
+
+## Limitations
+
+- The backtester's Brier score compares the entry price with whether the trade made money. That measures the strategy, not the calibration of the probability. It has to be scored against the event's actual outcome, with trading profit reported separately.
+- The README describes PostgreSQL persistence and a web frontend; neither is implemented yet.
+- Tests need `PYTHONPATH=src` to run, a packaging detail to fix.
+
+## My contribution
+
+The research question, the modelling approach and the architecture are mine. Most of the code was written with AI coding agents, so I am reviewing it module by module; the Brier score issue above came out of that review.

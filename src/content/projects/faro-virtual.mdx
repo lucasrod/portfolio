@@ -1,0 +1,38 @@
+---
+title: Faro Virtual
+question: Can a course scattered across EVA pages, PDFs and OpenFING videos become one coherent path for students?
+summary: A learning environment that gathers university course material from several sources into one reader, keeping each resource's origin. Next.js, Supabase and Python workers.
+lang: en
+status: in-progress
+pending:
+  - Final student experience and the first pilot course in the shared environment
+  - Continuous operation of the capture workers
+tier: supporting
+order: 4
+roles: [Product, Full-stack engineering]
+stack: [Next.js, TypeScript, Supabase, PostgreSQL, Python]
+repo:
+  visibility: private
+verified:
+  commit: 2779aa4
+  date: 2026-11-10
+preview: faro-sources
+---
+
+## Problem
+
+At the Facultad de Ingeniería, a single course can be spread across EVA pages, PDFs, OpenFING videos and previous editions. Faro Virtual brings those materials into one reader that follows the course structure and links back to each original source.
+
+## Approach
+
+- A Next.js app for students and administrators.
+- Supabase for PostgreSQL, authentication, storage and row-level security.
+- Python workers that capture EVA courses, add curated OpenFING videos and export PDF compilations.
+
+## Results
+
+The repository includes a course catalogue and reader with progress and saved resources, an admin console for reviewing snapshots, and the capture, sync and PDF export workers. The final student experience and the first pilot course are still in progress.
+
+## My contribution
+
+Product definition, architecture and implementation, with AI coding agents as part of the development workflow.

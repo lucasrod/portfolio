@@ -1,0 +1,57 @@
+---
+title: Census 2023 classifiers
+question: How well can Uruguay's 2023 Census predict whether a person attends school or is employed, and for whom does the model fail?
+summary: Two binary classifiers on person-level microdata from Uruguay's 2023 Census, built as a tested Python package with scikit-learn pipelines and a command-line interface.
+lang: en
+status: in-progress
+pending:
+  - Fix missing-value handling (rows are dropped before the imputer runs)
+  - Validate the employment label against the INE data dictionary
+  - Evaluate with ROC-AUC, PR-AUC, calibration and stratified cross-validation, including by subgroup
+  - Fix packaging and the two failing tests so the project runs from a clean install
+  - Make the repository public
+tier: featured
+order: 2
+roles: [Machine learning, Data pipelines]
+stack: [Python, scikit-learn, pandas, Parquet, Typer, pytest]
+context: Coursework for ST3189 Machine Learning, University of London (2025).
+repo:
+  visibility: private
+data: INE Uruguay, Censo 2023 person-level microdata (extended file)
+facts:
+  - label: Tests passing
+    value: 13 of 15
+    source: pytest run on commit 177c270, 10 November 2026
+verified:
+  commit: 177c270
+  date: 2026-11-10
+preview: census-pipeline
+---
+
+## Problem
+
+Census microdata describes every person in the country, which makes it a good test of whether simple, interpretable models can predict social outcomes. The project frames two binary questions: does a person attend an educational institution, and are they currently working?
+
+## Data
+
+The source is the extended person-level file of Uruguay's 2023 Census, published by the Instituto Nacional de Estadística (INE). An earlier design joined households and dwellings; the project now uses only the extended person file, which already contains the merged records. The first pipeline step converts the CSV to Snappy-compressed Parquet for fast reads.
+
+## Approach
+
+- **Two tasks.** School attendance is modelled with logistic regression and employment with a random forest, each inside a scikit-learn pipeline.
+- **Clustering as a feature.** A custom `ClusterFeatureAdder` transformer runs K-means on selected numeric columns and adds the cluster label as a feature.
+- **Engineering.** The code is a Python package with a Typer command-line interface, a Makefile, a development mode that trains on a stratified sample, and a pytest suite.
+
+## Results
+
+There are no results to report yet. The current code drops every row with a missing value before the imputer runs, which changes the population the model learns from. Metrics produced before fixing that would not be trustworthy, so they are not shown here.
+
+## Limitations
+
+- Accuracy alone is a poor measure for these classes, which are imbalanced. The evaluation will move to ROC-AUC, PR-AUC, calibration and per-group error.
+- K-means currently runs on unscaled features, and its contribution to prediction has not been tested.
+- The employment label is derived from variable `PERAL06` and still needs checking against INE's official dictionary.
+
+## My contribution
+
+The research questions, the data choices and the design are mine. Most of the implementation was written with AI coding agents, so the next step is to review every module, add tests around the data handling and fix the problems listed above before publishing results.

@@ -1,0 +1,94 @@
+---
+title: Ames Housing
+question: Which characteristics of a house explain its sale price, once the data's hidden absences are handled properly?
+summary: A reproducible R and Quarto analysis of 2,930 home sales in Ames, Iowa, with a documented cleaning pipeline and design decisions recorded as ADRs.
+lang: en
+status: in-progress
+pending:
+  - Predictive modelling chapter (regularised regression, random forest, gradient boosting with cross-validation)
+  - Clustering chapter and conclusions
+  - Publishing the Quarto book as an HTML report
+tier: featured
+order: 1
+roles: [Statistical analysis, Data cleaning]
+stack: [R, tidyverse, Quarto, modeldata, knitr]
+context: Final project for a descriptive statistics course at FCEA, Universidad de la República (2025).
+repo:
+  url: https://github.com/lucasrod/ames-housing
+  visibility: public
+data: De Cock (2011), Ames Housing, via the modeldata R package
+facts:
+  - label: Sales in the dataset
+    value: "2,930"
+    source: Row count of data/ames_clean.rds
+  - label: Original variables
+    value: "74"
+    source: modeldata::ames, documented in the README
+  - label: Sales after outlier filter
+    value: "2,925"
+    source: Row count of data/ames_tf_generic.rds
+  - label: Numeric variables with structural zeros recoded
+    value: "13"
+    source: ADR-002
+  - label: Median sale price
+    value: "$160,000"
+    source: Computed from data/ames_clean.rds
+  - label: Neighbourhoods
+    value: "28"
+    source: Distinct values of Neighborhood
+verified:
+  commit: 05e9cdf
+  date: 2026-11-10
+preview: ames-histogram
+---
+
+import AmesMap from '../../components/AmesMap.astro';
+
+## Problem
+
+House prices in Ames range from $12,789 to $755,000 across 28 neighbourhoods. The aim is to explain that variation: how much of a price comes from size, how much from location, and whether the month of sale matters once both are accounted for.
+
+Before any model, the data has a less visible problem. Many numeric columns use `0` to mean that a feature does not exist. A house with no pool has `Pool_Area = 0`, which is not a pool of zero square feet. Left as is, those zeros distort means and variances, create artificial bimodal distributions, block log transformations and blur the line between "has none" and "measures nothing".
+
+## Data
+
+The project uses Dean De Cock's Ames Housing data (2011) as packaged in `modeldata::ames`: 2,930 residential sales between 2006 and 2010, described by 74 variables. The choice of this version over the original Kaggle files is recorded in ADR-001.
+
+<AmesMap label="Figure 1" />
+
+## Approach
+
+The work is a Quarto book in R. Chapters 3 and 4 save their results as RDS files, so later chapters start from a fixed, versioned dataset.
+
+### Cleaning (chapter 3)
+
+- **Structural zeros to missing.** Thirteen numeric variables, from `Pool_Area` (99.56% zeros) to `Garage_Cars` (5.39%), had their zeros recoded as `NA`, each paired with a binary `has_*` indicator where useful (ADR-002).
+- **Categorical absences made explicit.** Levels such as `None` or `No_Garage` are kept as real categories and also produce `has_*` indicators (ADR-003).
+- **Contradictions between paired columns.** Seven pairs such as `Garage_Type` and `Garage_Area` were checked for houses marked as having a garage with zero area, or marked as having none with a positive area, and resolved with explicit asymmetric rules (ADR-004).
+
+### Transformations (chapter 4)
+
+- Sales above 4,000 sq ft of living area were removed, following De Cock's own recommendation. That drops 5 sales and leaves 2,925.
+- New variables: `Total_SqFt` (basement plus above-grade area) and `FireYN`.
+- Long ordinal scales were collapsed, factor baselines reordered, and log, square-root or square transformations applied where the distribution called for it.
+
+### Engineering choices
+
+Cleaning steps are pure R functions that record what they changed in an attribute of the returned data, and the book prints that log next to each step (ADR-005). Seven architecture decision records explain the main choices and their trade-offs.
+
+## Results
+
+The descriptive work is done and verified. Figure 1 is drawn from the cleaned data: the median sale is $160,000, and the median price per square foot of living area is $120.
+
+The predictive chapter is not finished, so this page reports no model performance yet. Its plan is to compare regularised linear regression, random forest and gradient boosting with 5-fold cross-validation, with `log(Sale_Price)` as the response, holding out a test set before any data-dependent transformation.
+
+## Limitations
+
+- No model results yet. Any number about predictive accuracy would be premature.
+- The exploratory chapter is written but has not been reviewed against the final cleaned data.
+- Experiment tracking with MLflow is decided (ADR-007) but not implemented.
+- The data covers one small US city between 2006 and 2010, including the start of the 2008 housing crisis, so findings do not transfer directly to other markets.
+
+## My contribution
+
+I wrote all of the analysis and code: the cleaning and transformation functions, the table helpers, the decision records and the Quarto book.
