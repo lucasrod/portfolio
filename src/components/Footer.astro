@@ -1,0 +1,19 @@
+---
+import { site } from '../data/site';
+import { t, type Lang } from '../i18n/ui';
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const year = new Date().getFullYear();
+---
+
+<footer class="no-print mt-24 border-t border-rule">
+  <div class="wrap flex flex-col gap-3 py-8 text-sm text-ink-2 sm:flex-row sm:items-center sm:justify-between">
+    <p>{site.name}, {site.location}. {year}.</p>
+    <ul class="flex flex-wrap gap-x-5 gap-y-1">
+      <li><a class="link" href={site.github}>GitHub</a></li>
+      {site.linkedin && <li><a class="link" href={site.linkedin}>LinkedIn</a></li>}
+      {site.email && <li><a class="link" href={`mailto:${site.email}`}>Email</a></li>}
+      {site.sourceRepo && <li><a class="link" href={site.sourceRepo}>{t(lang, 'footer.source')}</a></li>}
+    </ul>
+  </div>
+</footer>

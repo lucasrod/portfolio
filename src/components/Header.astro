@@ -1,0 +1,53 @@
+---
+import { site } from '../data/site';
+import { t, type Lang } from '../i18n/ui';
+import ThemeToggle from './ThemeToggle.astro';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const path = Astro.url.pathname;
+
+const links = [
+  { href: '/projects/', label: t(lang, 'nav.projects') },
+  { href: '/about/', label: t(lang, 'nav.about') },
+  { href: '/cv/', label: t(lang, 'nav.cv') },
+  { href: '/contact/', label: t(lang, 'nav.contact') },
+];
+const isCurrent = (href: string) => path === href || path.startsWith(href) || path.startsWith('/es' + href);
+---
+
+<header class="no-print sticky top-0 z-40 border-b border-transparent bg-paper/90 backdrop-blur supports-[backdrop-filter]:bg-paper/75" data-header>
+  <div class="wrap flex h-16 items-center justify-between gap-2">
+    <a href="/" aria-label={`${site.name}, home`} class="whitespace-nowrap font-sans text-[0.9rem] font-semibold tracking-[-0.01em] text-ink sm:text-[0.95rem]">
+      <span>{site.name.split(' ')[0]}</span><span class="hidden min-[440px]:inline"> {site.name.split(' ').slice(1).join(' ')}</span>
+    </a>
+    <nav aria-label="Main" class="flex items-center gap-0 sm:gap-2">
+      <ul class="flex items-center sm:gap-1">
+        {
+          links.map((l) => (
+            <li>
+              <a
+                href={l.href}
+                aria-current={isCurrent(l.href) ? 'page' : undefined}
+                class="rounded px-1.5 py-1.5 text-[0.8125rem] sm:text-sm text-ink-2 transition-colors hover:text-ink aria-[current=page]:text-ink aria-[current=page]:underline aria-[current=page]:decoration-accent aria-[current=page]:decoration-2 aria-[current=page]:underline-offset-[0.55em] sm:px-2.5"
+              >
+                {l.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+      <ThemeToggle label={t(lang, 'theme.toggle')} />
+    </nav>
+  </div>
+</header>
+
+<script>
+  // Show the header's bottom rule only after the page has scrolled.
+  const header = document.querySelector<HTMLElement>('[data-header]');
+  if (header) {
+    const onScroll = () => header.classList.toggle('border-rule', window.scrollY > 8);
+    onScroll();
+    addEventListener('scroll', onScroll, { passive: true });
+  }
+</script>
