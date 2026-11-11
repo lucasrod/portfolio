@@ -85,6 +85,7 @@ export const site: Site = {
   tools: [
     { group: 'Statistics and modelling', items: ['R', 'tidyverse', 'tidymodels', 'scikit-learn', 'Bayesian updating', 'regression and classification'] },
     { group: 'Data and engineering', items: ['Python', 'pandas', 'SQL', 'SQL Server', 'Azure', 'Parquet', 'pytest', 'FastAPI', 'REST and SOAP APIs'] },
+    { group: 'Operating systems', items: ['macOS', 'Linux (Ubuntu, Arch, Manjaro)', 'Windows and Windows Server'] },
     { group: 'Reporting and product', items: ['Quarto', 'Jupyter', 'Excel', 'Tableau', 'Stata', 'SPSS', 'Git', 'TypeScript', 'Next.js', 'Supabase'] },
   ],
 };
