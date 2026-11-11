@@ -1,0 +1,226 @@
+---
+/**
+ * Figure: every Ames sale (2006–2010) placed by its coordinates and coloured by
+ * sale price per square foot of above-grade living area.
+ * Data: /data/ames-sales.json, exported by tools/export_ames.py (provenance inside).
+ */
+import summary from '../data/ames-summary.json';
+
+interface Props {
+  caption?: boolean;
+  label?: string;
+}
+const { caption = true, label = 'Figure 1' } = Astro.props;
+const fmt = new Intl.NumberFormat('en-US');
+const description = `Map of ${fmt.format(summary.n)} home sales in Ames, Iowa, between ${summary.years[0]} and ${summary.years[1]}, coloured by sale price per square foot of living area. The median is $${summary.medianPricePerSqft} per square foot.`;
+---
+
+<figure class="ames-map" data-ames-map>
+  <div class="relative overflow-hidden rounded-lg bg-panel">
+    <canvas
+      class="block aspect-[4/3] w-full touch-none"
+      role="img"
+      aria-label={description}
+      data-canvas></canvas>
+    <p
+      class="tabular pointer-events-none absolute left-4 top-3 font-sans text-sm font-medium text-ink-2"
+      aria-hidden="true"
+      data-year></p>
+    <div
+      class="pointer-events-none absolute z-10 hidden min-w-44 rounded-md border border-rule bg-paper px-3 py-2 font-sans text-xs leading-relaxed text-ink shadow-[0_6px_24px_-12px_rgb(0_0_0/0.35)]"
+      role="status"
+      aria-live="polite"
+      data-tip></div>
+    <noscript>
+      <p class="p-4 text-sm text-ink-2">This interactive figure needs JavaScript. {description}</p>
+    </noscript>
+  </div>
+  <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 font-sans text-xs text-ink-2" aria-hidden="true">
+    <span>Price per sq ft</span>
+    <ol class="flex flex-wrap items-center gap-x-3 gap-y-1" data-legend></ol>
+  </div>
+  {
+    caption && (
+      <figcaption class="mt-3 max-w-[60ch] font-serif text-[0.97rem] leading-snug text-ink-2">
+        <span class="font-sans text-xs font-semibold text-ink">{label}.</span>{' '}
+        {fmt.format(summary.n)} home sales in Ames, Iowa, {summary.years[0]} to {summary.years[1]}, by sale price per square
+        foot of living area. Hover or tap a point for the sale. Data cleaned in my{' '}
+        <a class="link" href="/projects/ames-housing/">Ames Housing project</a>, commit{' '}
+        <a class="link" href={`${summary.provenance.repo}/tree/${summary.provenance.commit}`}>{summary.provenance.commit}</a>.
+      </figcaption>
+    )
+  }
+</figure>
+
+<script>
+  type Payload = {
+    neighborhoods: string[];
+    rows: [number, number, number, number, number, number][];
+  };
+
+  const usd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+  const num = new Intl.NumberFormat('en-US');
+
+  function cssVar(name: string) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  }
+
+  function quantiles(sorted: number[], qs: number[]) {
+    return qs.map((q) => sorted[Math.min(sorted.length - 1, Math.floor(q * sorted.length))]);
+  }
+
+  async function init(root: HTMLElement) {
+    const canvas = root.querySelector<HTMLCanvasElement>('[data-canvas]')!;
+    const tip = root.querySelector<HTMLDivElement>('[data-tip]')!;
+    const yearEl = root.querySelector<HTMLParagraphElement>('[data-year]')!;
+    const legend = root.querySelector<HTMLOListElement>('[data-legend]')!;
+    const ctx = canvas.getContext('2d')!;
+
+    const res = await fetch('/data/ames-sales.json');
+    const data: Payload = await res.json();
+    const pts = data.rows
+      .map(([lon, lat, price, area, year, n]) => ({ lon, lat, price, area, year, n, ppsf: price / area, x: 0, y: 0, c: 0 }))
+      .sort((a, b) => a.year - b.year);
+
+    // Five equal-count classes of price per square foot.
+    const sortedP = pts.map((p) => p.ppsf).sort((a, b) => a - b);
+    const breaks = quantiles(sortedP, [0.2, 0.4, 0.6, 0.8]);
+    for (const p of pts) p.c = breaks.findIndex((b) => p.ppsf < b) === -1 ? 4 : breaks.findIndex((b) => p.ppsf < b);
+
+    const labels = [
+      `< $${Math.round(breaks[0])}`,
+      `$${Math.round(breaks[0])}–${Math.round(breaks[1])}`,
+      `$${Math.round(breaks[1])}–${Math.round(breaks[2])}`,
+      `$${Math.round(breaks[2])}–${Math.round(breaks[3])}`,
+      `> $${Math.round(breaks[3])}`,
+    ];
+    legend.innerHTML = labels
+      .map((l, i) => `<li class="flex items-center gap-1.5 whitespace-nowrap"><span class="inline-block size-2.5 rounded-full" style="background:var(--seq-${i})"></span>${l}</li>`)
+      .join('');
+
+    const lons = pts.map((p) => p.lon), lats = pts.map((p) => p.lat);
+    const minLon = Math.min(...lons), maxLon = Math.max(...lons);
+    const minLat = Math.min(...lats), maxLat = Math.max(...lats);
+    const kx = Math.cos(((minLat + maxLat) / 2) * (Math.PI / 180));
+
+    let colors: string[] = [];
+    let w = 0, h = 0, r = 2.2;
+    let shown = pts.length;
+    let hover = -1;
+
+    function readColors() {
+      colors = [0, 1, 2, 3, 4].map((i) => cssVar(`--seq-${i}`));
+    }
+
+    function layout() {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      w = canvas.clientWidth; h = canvas.clientHeight;
+      canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const pad = Math.max(16, w * 0.05);
+      const spanX = (maxLon - minLon) * kx, spanY = maxLat - minLat;
+      const s = Math.min((w - 2 * pad) / spanX, (h - 2 * pad - 16) / spanY);
+      const ox = (w - spanX * s) / 2, oy = (h - spanY * s) / 2 + 8;
+      for (const p of pts) {
+        p.x = ox + (p.lon - minLon) * kx * s;
+        p.y = oy + (maxLat - p.lat) * s;
+      }
+      r = w < 480 ? 1.8 : 2.3;
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, w, h);
+      // Low values first so the expensive end sits on top.
+      for (let c = 0; c < 5; c++) {
+        ctx.fillStyle = colors[c];
+        ctx.globalAlpha = c < 2 ? 0.75 : 0.9;
+        ctx.beginPath();
+        for (let i = 0; i < shown; i++) {
+          const p = pts[i];
+          if (p.c !== c) continue;
+          ctx.moveTo(p.x + r, p.y);
+          ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+        }
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      if (hover >= 0) {
+        const p = pts[hover];
+        ctx.strokeStyle = cssVar('--ink');
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, r + 3, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    }
+
+    function nearest(mx: number, my: number) {
+      let best = -1, bd = 14 * 14;
+      for (let i = 0; i < shown; i++) {
+        const dx = pts[i].x - mx, dy = pts[i].y - my, d = dx * dx + dy * dy;
+        if (d < bd) { bd = d; best = i; }
+      }
+      return best;
+    }
+
+    function showTip(i: number) {
+      hover = i;
+      draw();
+      if (i < 0) { tip.classList.add('hidden'); return; }
+      const p = pts[i];
+      const name = data.neighborhoods[p.n].replaceAll('_', ' ');
+      tip.innerHTML =
+        `<p class="font-semibold">${name}, ${p.year}</p>` +
+        `<p>${usd.format(p.price)} for ${num.format(p.area)} sq ft</p>` +
+        `<p class="text-ink-2">${usd.format(Math.round(p.ppsf))} per sq ft</p>`;
+      tip.classList.remove('hidden');
+      const tw = tip.offsetWidth, th = tip.offsetHeight;
+      let left = p.x + 12, top = p.y - th - 10;
+      if (left + tw > w - 8) left = p.x - tw - 12;
+      if (top < 8) top = p.y + 12;
+      tip.style.left = `${left}px`;
+      tip.style.top = `${top}px`;
+    }
+
+    canvas.addEventListener('pointermove', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      showTip(nearest(e.clientX - rect.left, e.clientY - rect.top));
+    });
+    canvas.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') showTip(-1); });
+
+    readColors();
+    layout();
+
+    // One orchestrated moment: sales appear year by year, in the order they happened.
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const years = [...new Set(pts.map((p) => p.year))];
+    if (reduce) {
+      shown = pts.length;
+      yearEl.textContent = `${years[0]}–${years[years.length - 1]}`;
+      draw();
+    } else {
+      const duration = 1600;
+      const t0 = performance.now();
+      const step = (now: number) => {
+        const t = Math.min(1, (now - t0) / duration);
+        const eased = 1 - Math.pow(1 - t, 3);
+        shown = Math.round(eased * pts.length);
+        const y = pts[Math.max(0, shown - 1)].year;
+        yearEl.textContent = t < 1 ? String(y) : `${years[0]}–${years[years.length - 1]}`;
+        draw();
+        if (t < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    }
+
+    new ResizeObserver(() => { layout(); draw(); }).observe(canvas);
+    document.addEventListener('themechange', () => { readColors(); draw(); });
+  }
+
+  for (const el of document.querySelectorAll<HTMLElement>('[data-ames-map]')) {
+    const io = new IntersectionObserver((entries) => {
+      if (entries.some((e) => e.isIntersecting)) { io.disconnect(); init(el); }
+    }, { rootMargin: '200px' });
+    io.observe(el);
+  }
+</script>
